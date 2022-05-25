@@ -1,2 +1,5 @@
 *.dcm
 Scratch.*
+.idea/
+.ipynb_checkpoints/
+
