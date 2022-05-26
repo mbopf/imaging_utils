@@ -2,15 +2,12 @@ import argparse
 import os
 import glob
 import sys
-import typing
+import itertools
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pydicom
-import random
 
-def greeting(name: str) -> str:
-    return 'Hello ' + name
 
 def get_file_list(path: str, wild: str = None) -> list:
     ret_list = []
@@ -27,7 +24,6 @@ def get_file_list(path: str, wild: str = None) -> list:
     return ret_list
 
 
-import itertools
 # From Alex Chan https://alexwlchan.net/2018/12/iterating-in-fixed-size-chunks/
 def chunked_iterable(iterable, size):
     it = iter(iterable)
@@ -94,16 +90,19 @@ def img_browse():
         if len(full_list) % batch_size != 0:
             batches = int(len(full_list)/batch_size) + 1
         cmd = 'n'
+
+        file_chunks = chunked_iterable(full_list, batch_size)
         while cmd != 'q':
-            for ax, file in zip(axs.ravel(), full_list[start:end]):
-                print(batch_num, start, end)
+            file_chunk = next(file_chunks)
+            #for ax, file in zip(axs.ravel(), full_list[start:end]):
+            for ax, file in zip(axs.ravel(), file_chunk):
+#                print(batch_num, start, end)
                 basename = os.path.basename(file)
                 dicom_ds = pydicom.read_file(file, force=True)
                 if opt.list_dicom:
                     print(dicom_ds)
                 pixel_array = dicom_ds.pixel_array
                 ishape = pixel_array.shape
-                #print(ishape[0])
                 ax.set_title(basename)
                 ax.tick_params(bottom=False, left=False, labelbottom=False, labelleft=False)
                 ax.set_xlabel(ishape[1])
@@ -118,14 +117,13 @@ def img_browse():
             if not cmd.startswith('q') and not cmd.startswith('Q'):
                 if cmd.startswith('n') or cmd.startswith('N'):
                     batch_num += 1
-                elif cmd.startswith('b') or cmd.startswith('B'):
-                    batch_num -= 1
+#                elif cmd.startswith('b') or cmd.startswith('B'):
+#                    batch_num -= 1
 
-                start = batch_size * (batch_num - 1)
-                end = batch_size * batch_num
-                if end > len(full_list):
-                    end = len(full_list)
-
+#                start = batch_size * (batch_num - 1)
+#                end = batch_size * batch_num
+#                if end > len(full_list):
+#                    end = len(full_list)
 
 if __name__ == '__main__':
     print(f'Backend: {mpl.get_backend()}')
