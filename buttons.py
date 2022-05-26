@@ -23,6 +23,10 @@ s = np.sin(2*np.pi*freqs[0]*t)
 l, = plt.plot(t, s, lw=2)
 
 
+def quit(event):
+    exit(0)
+
+
 class Index:
     ind = 0
 
@@ -40,13 +44,17 @@ class Index:
         l.set_ydata(ydata)
         plt.draw()
 
+
 callback = Index()
-axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
-axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
-bnext = Button(axnext, 'Next')
-bnext.on_clicked(callback.next)
+axprev = plt.axes([0.59, 0.05, 0.1, 0.075])
+axnext = plt.axes([0.7, 0.05, 0.1, 0.075])
+axquit = plt.axes([0.81, 0.05, 0.1, 0.075])
 bprev = Button(axprev, 'Previous')
 bprev.on_clicked(callback.prev)
+bnext = Button(axnext, 'Next')
+bnext.on_clicked(callback.next)
+bquit = Button(axquit, 'Quit')
+bquit.on_clicked(quit)
 
 plt.show()
 
