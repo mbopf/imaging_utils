@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import glob
+import math
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -26,12 +27,12 @@ def get_file_list(path: str, glob_str: str = None, filter_images=True) -> list:
             print('Warning: glob string ignored for single file input')
         return [path]
 
-    if glob_str:
-        if not path.endswith('/'):
-            path += '/'
-        filelist = glob.glob(path + glob_str)
-    else:
-        filelist = os.listdir(path)
+#    if not glob_str:
+#        glob_str = "*.*"
+
+    if not path.endswith('/'):
+        path += '/'
+    filelist = glob.glob(path + glob_str)
 
     if filter_images:
         filelist = [file for file in filelist if is_img_ext(file)]
@@ -65,6 +66,7 @@ class Chunk:
         self.chunk_size = chunk_size
         self.fig = fig
         self.axs = axs
+        self.num_chunks = math.ceil(len(filelist)/chunk_size)
 
     def get_chunk(self):
         start = self.chunk_size * (self.chunk_idx - 1)
@@ -79,7 +81,7 @@ class Chunk:
         curr_chunk = self.get_chunk()
         print("In display_chunk():")
         print(f"axs: {self.axs}; curr_chunk: {curr_chunk}")
-        for ax, file in zip(self.axs.ravel(), curr_chunk):
+        for ax, file in zip(self.axs, curr_chunk):
             basename = os.path.basename(file)
             img, im_shape = get_image(file)
             ax.set_title(basename)
@@ -88,18 +90,21 @@ class Chunk:
             ax.set_ylabel(im_shape[0])
             ax.imshow(img, cmap=plt.cm.bone)
 
-        #fig.suptitle(f"Batch {batch_num} of {batches}")
-        self.fig.suptitle(f"Batch batch_num of batches")
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        self.fig.suptitle(f"Batch {self.chunk_idx} of {self.num_chunks}")
+#        self.fig.canvas.draw()
+#        self.fig.canvas.flush_events()
 
     def next(self, event):
-        self.chunk_idx +=1
-        self.display_chunk()
+        if self.chunk_idx < self.num_chunks:
+            self.chunk_idx += 1
+            self.display_chunk()
+        #else: print message?
 
     def prev(self, event):
-        self.chunk_idx -=1
-        self.display_chunk()
+        if self.chunk_idx > 1:
+            self.chunk_idx -= 1
+            self.display_chunk()
+        #else: print message?
 
 
 def img_browse():
@@ -110,9 +115,8 @@ def img_browse():
     parser.add_argument('--file_path', required=True, help='File or directory to process')
     parser.add_argument('--list_dicom', default=False, action='store_true', help='Print full content of DICOM files')
     parser.add_argument('--view_image', default=True, action='store_true', help='Display images')
-    parser.add_argument('--glob_str', default=False, help='Unix-style wildcard file pattern')
+    parser.add_argument('--glob_str', default="*.*", help='Unix-style wildcard file pattern')
     parser.add_argument('--grid', default='1,1', help='Image display grid (rows, cols) default="1,1"')
-#    parser.add_argument('--batchsize', default=1, help='How many images to display on a page?')
     parser.add_argument('--random', default=False, action='store_true', help='Random shuffle images?')
 
     opt = parser.parse_args()
@@ -136,9 +140,14 @@ def img_browse():
     print(f'len(full_list) = {len(full_list)}')
     print(f'fsize = {fsize}')
     fig, axs = plt.subplots(grid_tuple[0], grid_tuple[1], figsize=fsize)
+    if grid_tuple[0] == 1 and grid_tuple[1] == 1:
+        axes = [axs]
+    else:
+        axes = list(axs.ravel())
+
     plt.subplots_adjust(bottom=0.2)
 
-    callback = Chunk(full_list, batch_size, fig, axs)
+    callback = Chunk(full_list, batch_size, fig, axes)
     axprev = plt.axes([0.59, 0.05, 0.1, 0.075])
     axnext = plt.axes([0.7, 0.05, 0.1, 0.075])
     axquit = plt.axes([0.81, 0.05, 0.1, 0.075])
