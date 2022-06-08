@@ -90,6 +90,10 @@ class Chunk:
             ax.set_ylabel(im_shape[0])
             ax.imshow(img, cmap=plt.cm.bone)
 
+        if len(curr_chunk) < self.chunk_size:
+            for ax in self.axs[len(curr_chunk):self.chunk_size]:
+                ax.clear()
+
         self.fig.suptitle(f"Batch {self.chunk_idx} of {self.num_chunks}")
 #        self.fig.canvas.draw()
 #        self.fig.canvas.flush_events()
