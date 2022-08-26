@@ -19,7 +19,7 @@ def is_img_ext(filename: str) -> bool:
     return os.path.splitext(filename)[1].lower() in ALL_EXTENSIONS
 
 
-# Give a path and optional glob string, return the list of files in
+# Given a path and optional glob string, return the list of files in
 # the directory. Also, optionally filter by image extension.
 def get_file_list(path: str, glob_str: str = None, filter_images=True) -> list:
     if os.path.isfile(path):
